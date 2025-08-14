@@ -1417,14 +1417,10 @@ document.addEventListener('gesturestart', function(e) {
 
 
 
-
-let icono, modalGroup;
-const interactDistance = 2.5;
-
 function crearIcono() {
     const grupo = new THREE.Group();
 
-    // 1. Icono interactivo
+    // Icono interactivo
     const iconoGeom = new THREE.SphereGeometry(0.3, 32, 32);
     const iconoMat = new THREE.MeshStandardMaterial({ 
         color: 0x00aaff,
@@ -1437,7 +1433,7 @@ function crearIcono() {
     icono.castShadow = true;
     grupo.add(icono);
 
-    // 2. Configuración del modal
+    // Configuración del modal
     modalGroup = new THREE.Group();
     modalGroup.visible = false;
 
@@ -1453,71 +1449,69 @@ function crearIcono() {
     );
     modalGroup.add(modalBase);
 
-    // Imagen - Solución definitiva
+    // Imagen - Versión corregida
     const imgMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(2.7, 1.8),
         new THREE.MeshStandardMaterial({
             side: THREE.DoubleSide,
-            color: 0xeeeeee // Color temporal
+            map: null, // Inicialmente sin textura
+            transparent: true
         })
     );
-    imgMesh.position.set(0, 0, 0.1); // Asegurar que esté sobre el fondo
+    imgMesh.position.set(0, 0, 0.1);
     modalGroup.add(imgMesh);
 
-    // Cargar imagen con solución 100% funcional
+    // Función mejorada para cargar imagen
     const loadImage = () => {
-        // 1. Configurar CORS para imágenes externas
-        THREE.TextureLoader.crossOrigin = "Anonymous";
-        
-        // 2. Crear loader con manejo de errores
         const textureLoader = new THREE.TextureLoader();
         
-        // 3. Lista de posibles fuentes (externa + local)
-        const imageSources = [
-            'https://www.welcomechile.com/futrono/imagenes/futrono-175.jpg',
-            'img/img1.jpg',
-            'https://via.placeholder.com/800x600/333333/FFFFFF?text=Futrono+Chile' // Fallback
-        ];
-
-        // 4. Función para intentar cargar
-        const tryLoadImage = (index = 0) => {
-            if (index >= imageSources.length) return;
-
-            textureLoader.load(
-                imageSources[index] + (index === 0 ? '?cache=' + Date.now() : ''), // Cache busting para la primera
-                (texture) => {
-                    console.log('Imagen cargada desde:', imageSources[index]);
-                    
-                    // A. Asignar textura
-                    imgMesh.material.map = texture;
-                    
-                    // B. Ajustar relación de aspecto
-                    const aspect = texture.image.width / texture.image.height;
-                    const targetAspect = 2.7/1.8;
-                    
-                    if (aspect > targetAspect) {
-                        imgMesh.scale.y = targetAspect / aspect;
-                    } else {
-                        imgMesh.scale.x = aspect / targetAspect;
-                    }
-                    
-                    // C. Forzar actualización
-                    imgMesh.material.needsUpdate = true;
-                    imgMesh.material.color.set(0xFFFFFF);
-                    
-                    // D. Configurar propiedades visuales
-                    imgMesh.material.metalness = 0.1;
-                    imgMesh.material.roughness = 0.5;
-                },
-                undefined,
-                (error) => {
-                    console.error('Error con fuente:', imageSources[index], error);
-                    tryLoadImage(index + 1); // Intentar siguiente fuente
+        // Usa una imagen local como fallback seguro
+        const imagePath = 'img/img1.jpg'; // Asegúrate de que esta ruta es correcta
+        
+        textureLoader.load(imagePath, 
+            (texture) => {
+                console.log('Imagen cargada correctamente');
+                
+                // 1. Configurar la textura
+                texture.encoding = THREE.sRGBEncoding;
+                texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                
+                // 2. Aplicar al material
+                imgMesh.material.map = texture;
+                imgMesh.material.needsUpdate = true;
+                
+                // 3. Ajustar relación de aspecto sin distorsión
+                const imageAspect = texture.image.width / texture.image.height;
+                const targetAspect = 2.7 / 1.8;
+                
+                if (imageAspect > targetAspect) {
+                    // Imagen más ancha que el marco
+                    imgMesh.scale.set(1, targetAspect / imageAspect, 1);
+                } else {
+                    // Imagen más alta que el marco
+                    imgMesh.scale.set(imageAspect / targetAspect, 1, 1);
                 }
-            );
-        };
-
-        tryLoadImage(); // Comenzar con la primera fuente
+            },
+            undefined, 
+            (error) => {
+                console.error('Error al cargar imagen:', error);
+                // Crear textura de fallback programática
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#333333';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Imagen no disponible', canvas.width/2, canvas.height/2);
+                
+                const fallbackTexture = new THREE.CanvasTexture(canvas);
+                imgMesh.material.map = fallbackTexture;
+                imgMesh.material.needsUpdate = true;
+            }
+        );
     };
 
     loadImage();

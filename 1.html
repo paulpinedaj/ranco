@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="author" content="Paul Pineda - Chile">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ranco Game</title>
+
+
+<style>
+* {
+-webkit-tap-highlight-color: rgba(0,0,0,0);
+-webkit-tap-highlight-color: transparent;
+-webkit-touch-callout: none; /* iOS Safari */
+-webkit-user-select: none; /* Safari */
+-khtml-user-select: none; /* Konqueror HTML */
+-moz-user-select: none; /* Firefox */
+-ms-user-select: none; /* Internet Explorer/Edge */
+user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+-webkit-tap-highlight-color: transparent;
+}
+
+
+body {
+margin: 0;
+overflow: hidden;
+font-family: 'Arial Black', Arial, sans-serif;
+background-color: #000;
+}
+
+
+/* Botón de pantalla completa */
+.fullscreen-btn {
+position: fixed;
+top: 11px;
+right: 7px;
+background: rgba(30, 30, 30, 0.7);
+border: 1px solid rgba(255, 255, 255, 0.2);
+border-radius: 50%;
+width: 50px;
+height: 50px;
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+cursor: pointer;
+z-index: 1000;
+transition: all 0.2s;
+}
+
+.fullscreen-btn:hover {
+background: rgba(70, 70, 70, 0.9);
+}
+
+
+canvas {
+display: block;
+width: 100vw;
+height: 100vh;
+position: absolute;
+top: 0;
+left: 0;
+}
+
+
+button {
+padding: 0;
+font-size: 1.2rem;
+background: rgba(30, 30, 30, 0.7);
+border: 1px solid rgba(255, 255, 255, 0.2);
+border-radius: 50%;
+cursor: pointer;
+color: white;
+width: 60px;
+height: 60px;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+transition: all 0.1s;
+touch-action: manipulation;
+-webkit-tap-highlight-color: transparent;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+-webkit-touch-callout: none;
+touch-action: manipulation; /* Mejora la respuesta táctil */
+
+}
+
+button:active {
+transform: scale(0.9);
+background: rgba(70, 70, 70, 0.9);
+}
+
+
+/* Controles mejorados */
+.controles {
+position: absolute;
+bottom: 18px;
+width: 100%;
+display: flex;
+justify-content: space-between;
+padding: 1px 16px;
+box-sizing: border-box;
+z-index: 1;
+pointer-events: none;
+align-items: flex-end;;
+touch-action: none; /* Desactiva gestos en el área de controles */
+
+}
+
+.controles-movimiento, .controles-acciones {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+grid-template-rows: repeat(3, 1fr);
+gap: 0px;
+pointer-events: auto;
+justify-items: center;
+}
+
+.controles-movimiento {
+margin-right: 0;
+}
+
+
+/* Posicionamiento específico de los botones */
+#adelante {
+grid-column: 2;
+grid-row: 1;
+}
+
+#izquierda {
+grid-column: 1;
+grid-row: 2;
+}
+
+#derecha {
+grid-column: 3;
+grid-row: 2;
+}
+
+#atras {
+grid-column: 2;
+grid-row: 3;
+}
+
+/* Controles de acciones (derecha) */
+.controles-acciones {
+grid-template-columns: repeat(2, 1fr);
+grid-template-rows: repeat(3, 1fr);
+align-items: center;
+}
+
+#accion {
+grid-column: 1 / span 2;
+grid-row: 1;
+background: rgba(150, 0, 0, 0.7);
+border-radius: 30px;
+margin-bottom: 2px;
+}
+
+#camara-izq {
+grid-column: 1;
+grid-row: 2;
+background: rgba(0, 100, 150, 0.7);
+}
+
+#camara-der {
+grid-column: 2;
+grid-row: 2;
+background: rgba(0, 100, 150, 0.7);
+}
+
+#camara-arriba {
+grid-column: 1;
+grid-row: 3;
+background: rgba(100, 0, 150, 0.7);
+}
+
+#camara-abajo {
+grid-column: 2;
+grid-row: 3;
+background: rgba(100, 0, 150, 0.7);
+}
+
+#linterna {
+grid-column: 1 / span 2;
+grid-row: 4;
+background: rgba(150, 150, 0, 0.7);
+border-radius: 30px;
+margin-top: 2px;
+}
+
+/* Pantallas */
+.pantalla {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+color: white;
+z-index: 10;
+transition: opacity 1s, transform 1s;
+text-align: center;
+}
+
+/* Pantalla 1: Estudios Skeleton */
+#pantalla1 {
+background: black;
+}
+
+/* Pantalla 2: Título del juego */
+#pantalla2 {
+background: #0a1f0a;
+background-image: radial-gradient(circle at center, #1a3a1a 0%, #0a1f0a 70%);
+display: none;
+}
+
+
+/* Pantalla 3: Selección de héroe */
+#pantalla3 {
+background: rgba(0, 0, 0, 0.9);
+display: none;
+overflow-y: auto;
+padding: 20px 0;
+}
+
+/* Pantalla 4: Juego */
+#pantalla5 {
+display: none;
+}
+
+.logo {
+font-size: 36px;
+margin-bottom: 20px;
+text-transform: uppercase;
+letter-spacing: 5px;
+}
+
+.titulo-juego {
+font-size: 72px;
+font-weight: bold;
+margin-bottom: 30px;
+color: #4cff00;
+text-shadow: 0 0 10px #3aa000, 0 0 20px #4cff00;
+letter-spacing: 3px;
+animation: pulse 2s infinite;
+}
+
+
+@keyframes pulse {
+0% { transform: scale(1); }
+50% { transform: scale(1.05); }
+100% { transform: scale(1); }
+}
+
+.subtitulo {
+font-size: 24px;
+color: #a8d8a8;
+margin-bottom: 40px;
+}
+.seleccion-personaje {
+display: flex;
+width: 90%;
+max-width: 1200px;
+gap: 30px;
+flex-direction: column;
+}
+
+.personajes-container {
+display: flex;
+flex-direction: column;
+width: 100%;
+}
+
+.personajes {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+gap: 3px;
+width: 100%;
+max-height: 200px;
+overflow-y: auto;
+padding: 5px;
+}
+
+.personaje {
+width: 100%;
+height: 43px;
+background: rgba(30, 30, 30, 0.7);
+border-radius: 10px;
+display: flex;
+align-items: center;
+padding: 2px;
+cursor: pointer;
+transition: all 0.3s;
+border: 2px solid transparent;
+position: relative;
+overflow: hidden;
+min-width: 0;
+}
+
+.personaje:hover {
+transform: scale(1.02);
+box-shadow: 0 0 15px currentColor;
+}
+
+.personaje.seleccionado {
+border-color: white;
+box-shadow: 0 0 20px white;
+transform: scale(1.05);
+}
+
+.personaje::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+z-index: 1;
+}
+
+.avatar {
+width: 40px;
+height: 40px;
+border-radius: 50%;
+margin-right: 10px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 20px;
+font-weight: bold;
+z-index: 2;
+flex-shrink: 0;
+}
+
+.info-personaje {
+z-index: 2;
+min-width: 0;
+}
+
+.nombre-personaje {
+font-size: 14px;
+font-weight: bold;
+margin-bottom: 5px;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.tipo-personaje {
+font-size: 11px;
+color: #aaa;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+/* Efecto de máquina de escribir */
+.maquina-escribir {
+border-right: 3px solid white;
+animation: blink 0.75s step-end infinite;
+}
+
+@keyframes blink {
+from, to { border-color: transparent }
+50% { border-color: white }
+}
+
+/* Detalles personaje */
+.detalles-personaje {
+width: 100%;
+background: rgba(20, 20, 20, 0.8);
+padding: 8px;
+border-radius: 15px;
+border: 2px solid #444;
+min-height: 300px;
+position: relative;
+overflow: hidden;
+box-sizing: border-box;
+}
+
+.detalles-personaje::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+z-index: 1;
+}
+
+.detalles-contenido {
+position: relative;
+z-index: 2;
+height: 100%;
+display: flex;
+flex-direction: column;
+}
+
+.detalles-personaje h2 {
+color: gold;
+font-size: 21px;
+margin-bottom: 15px;
+text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.detalles-personaje p {
+font-size: 14px;
+line-height: 1.6;
+margin-bottom: 20px;
+flex: 1;
+overflow-y: auto;
+}
+
+.detalles-personaje .stats {
+display: flex;
+justify-content: space-around;
+margin: 15px 0;
+background: rgba(0, 0, 0, 0.5);
+border-radius: 10px;
+flex-wrap: wrap;
+}
+
+.stat {
+text-align: center;
+padding: 0 10px;
+margin: 5px 0;
+min-width: 80px;
+}
+
+.stat .valor {
+font-size: 24px;
+font-weight: bold;
+color: #ff5555;
+text-shadow: 0 0 5px rgba(255, 85, 85, 0.5);
+}
+
+.stat .nombre {
+font-size: 12px;
+color: #aaa;
+text-transform: uppercase;
+letter-spacing: 1px;
+}
+
+.btn-jugar {
+padding: 12px 24px;
+font-size: 18px;
+background: linear-gradient(to bottom, #ff3333, #990000);
+border: none;
+border-radius: 50px;
+color: white;
+cursor: pointer;
+transition: all 0.3s;
+align-self: center;
+margin-top: auto;
+box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+}
+
+.btn-jugar:hover {
+transform: scale(1.05);
+background: linear-gradient(to bottom, #ff4444, #aa0000);
+box-shadow: 0 6px 20px rgba(255, 0, 0, 0.6);
+}
+
+/* Efecto risa fantasmal */
+.risa-fantasmal {
+position: absolute;
+opacity: 0;
+animation: risa 4s forwards;
+font-size: 24px;
+color: #ff0000;
+text-shadow: 0 0 5px #ff0000;
+}
+
+@keyframes risa {
+0% { opacity: 0; transform: translateY(20px); }
+20% { opacity: 1; transform: translateY(0); }
+80% { opacity: 1; transform: translateY(0); }
+100% { opacity: 0; transform: translateY(-20px); }
+}
+
+.fondo-personaje {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+opacity: 0.2;
+z-index: 0;
+transition: opacity 0.5s;
+}
+
+.personaje.seleccionado .fondo-personaje {
+opacity: 0.4;
+}
+
+/* Nombre del jugador en el juego */
+.nombre-jugador {
+position: absolute;
+top: 20px;
+left: 20px;
+color: white;
+font-size: 24px;
+text-shadow: 0 0 5px black;
+z-index: 100;
+background: rgba(0, 0, 0, 0.5);
+padding: 5px 15px;
+border-radius: 20px;
+display: flex;
+align-items: center;
+}
+
+.color-personaje {
+width: 20px;
+height: 20px;
+border-radius: 50%;
+margin-right: 10px;
+display: inline-block;
+}
+
+/* Responsive para tabletas */
+@media (min-width: 600px) {
+.seleccion-personaje {
+flex-direction: row;
+}
+
+.personajes {
+grid-template-columns: 1fr;
+max-height: 500px;
+}
+
+.detalles-personaje {
+min-height: 500px;
+}
+
+.detalles-personaje h2 {
+font-size: 28px;
+}
+
+.detalles-personaje p {
+font-size: 16px;
+}
+
+.nombre-personaje {
+font-size: 18px;
+}
+
+.tipo-personaje {
+font-size: 14px;
+}
+}
+
+/* Responsive para escritorio */
+@media (min-width: 900px) {
+.personajes {
+width: 250px;
+}
+
+.detalles-personaje {
+padding: 43px;
+}
+
+.detalles-personaje h2 {
+font-size: 32px;
+}
+
+.stat .valor {
+font-size: 28px;
+}
+
+.stat .nombre {
+font-size: 14px;
+}
+
+.btn-jugar {
+padding: 15px 30px;
+font-size: 20px;
+}
+}
+
+/* Ajustes para pantallas más pequeñas */
+@media (max-width: 480px) {
+button {
+width: 50px;
+height: 50px;
+font-size: 1rem;
+}
+
+
+.personajes {
+grid-template-columns: repeat(auto-fill, minmax(134px, 1fr));
+max-height: 212px;
+}
+
+.personaje {
+height: 43px;
+}
+
+.avatar {
+width: 35px;
+height: 35px;
+font-size: 18px;
+}
+
+.nombre-jugador {
+font-size: 18px;
+top: 25px;
+left: 12px;
+}
+
+.color-personaje {
+width: 15px;
+height: 15px;
+}
+}
+
+/* Ajustes para tablets en orientación vertical */
+@media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
+.personajes {
+grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+max-height: 250px;
+}
+
+.personaje {
+height: 80px;
+}
+}
+
+/* Ajustes para pantallas grandes */
+@media (min-width: 1200px) {
+button {
+width: 70px;
+height: 70px;
+font-size: 1.5rem;
+}
+}
+
+/* Ajustes para orientación horizontal en móviles */
+@media (max-width: 900px) and (orientation: landscape) {
+.seleccion-personaje {
+flex-direction: row;
+}
+
+.personajes {
+max-height: 100vh;
+grid-template-columns: 1fr;
+}
+
+.detalles-personaje {
+min-height: auto;
+height: 100vh;
+}
+}
+</style>
+</head>
+<body>
+  <!-- Pantalla 1: Estudios Skeleton -->
+  <div class="pantalla" id="pantalla1">
+    <div class="logo maquina-escribir">ESTUDIOS SKELETON</div>
+  </div>
+
+  <!-- Pantalla 2: Título del juego -->
+  <div class="pantalla" id="pantalla2">
+    <div class="titulo-juego">RANCO GAME</div>
+    <div class="subtitulo">Explora rutas naturales</div>
+    <div class="risa-fantasmal" id="risa"></div>
+  </div>
+
+  <!-- Pantalla 3: Selección de héroe -->
+  <div class="pantalla" id="pantalla3">
+    
+    <div class="seleccion-personaje">
+      <div class="personajes-container">
+        <div class="personajes">
+          <div class="personaje" data-personaje="paul" data-color="#3399ff">
+            <div class="fondo-personaje" style="background: #3399ff;"></div>
+            <div class="avatar" style="background: #3399ff;">P</div>
+            <div class="info-personaje">
+              <div class="nombre-personaje">PAUL</div>
+              <div class="tipo-personaje">El estratega</div>
+            </div>
+          </div>
+          
+
+          
+          <div class="personaje" data-personaje="max" data-color="#996633">
+            <div class="fondo-personaje" style="background: #996633;"></div>
+            <div class="avatar" style="background: #996633;">P</div>
+            <div class="info-personaje">
+              <div class="nombre-personaje">MAX</div>
+              <div class="tipo-personaje">El resistente</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Detalles del personaje seleccionado -->
+      <div class="detalles-personaje" id="detalles-personaje">
+        <div class="fondo-personaje" id="fondo-detalle"></div>
+        <div class="detalles-contenido">
+          <h2 id="nombre-detalle">SELECCIONA UN HÉROE</h2>
+          <p id="historia-detalle">Cada personaje tiene habilidades únicas que te ayudarán a sobrevivir en Ranco Game. Elige sabiamente, tu decisión podría ser la diferencia entre la vida y la muerte.</p>
+          <div class="stats">
+            <div class="stat">
+              <div class="valor" id="fuerza">-</div>
+              <div class="nombre">FUERZA</div>
+            </div>
+            <div class="stat">
+              <div class="valor" id="velocidad">-</div>
+              <div class="nombre">VELOCIDAD</div>
+            </div>
+            <div class="stat">
+              <div class="valor" id="inteligencia">-</div>
+              <div class="nombre">INTELIGENCIA</div>
+            </div>
+          </div>
+          <button class="btn-jugar" id="btn-jugar" style="display: none;">JUGAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 5: Juego -->
+  <div class="pantalla" id="pantalla5">
+    <div class="nombre-jugador" id="nombre-jugador">
+      <div class="color-personaje" id="color-jugador"></div>
+      <span id="nombre-jugador-texto"></span>
+    </div>
+    <canvas id="juego"></canvas>
+    <div class="controles">
+      <!-- Controles de movimiento (izquierda) -->
+      <div class="controles-movimiento">
+        <button id="adelante">↑</button>
+        <button id="izquierda">←</button>
+        <button id="derecha">→</button>
+        <button id="atras">↓</button>
+      </div>
+      
+      <!-- Controles de acciones (derecha) -->
+      <div class="controles-acciones">
+        <button id="accion">A</button>
+        <button id="camara-izq">←</button>
+        <button id="camara-der">→</button>
+        <button id="camara-arriba">↑</button>
+        <button id="camara-abajo">↓</button>
+        <button id="linterna">B</button>
+        <button id="salto" class="control-btn">Saltar</button>
+
+      </div>
+    </div>
+  </div>
+  
+  <button class="fullscreen-btn" id="fullscreen-btn" style="display: none;">⛶</button>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/OBJLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.162.0/examples/js/loaders/IESLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.162.0/examples/js/lights/IESSpotLight.js"></script>
+
+
+  <script>
+    // Variables globales
+    let personajeSeleccionado = null;
+    let colorPersonaje = null;
+    let scene, camera, renderer, personaje;
+    let lastMoveSoundTime = 0;
+    const moveSoundCooldown = 200; // ms
+    let cameraAngle = 0;
+    let cameraPitch = 0.4; // Ángulo vertical de la cámara
+    let cameraDistance = 5;
+    let cameraHeight = 2;
+
+    let meson = null;
+    let flashlightEnabled = true;
+
+    // Datos de los personajes
+    const personajesData = {
+      paul: {
+        nombre: "PAUL",
+        historia: "Paul Ranco.",
+        fuerza: 6,
+        velocidad: 7,
+        inteligencia: 9
+      },
+
+      max: {
+        nombre: "MAX",
+        historia: "Max Ranco.",
+        fuerza: 9,
+        velocidad: 5,
+        inteligencia: 6
+      }
+    };
+
+    // Generador de sonidos básicos (como en juegos antiguos)
+    class SoundGenerator {
+      constructor() {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      // Sonido de explosión (3 notas)
+      playExplosion() {
+        const times = [0, 0.1, 0.2];
+        const freqs = [55, 110, 220]; // Notas graves
+        
+        times.forEach((time, i) => {
+          const osc = this.audioContext.createOscillator();
+          const gain = this.audioContext.createGain();
+          
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freqs[i], this.audioContext.currentTime + time);
+          
+          gain.gain.setValueAtTime(0.5, this.audioContext.currentTime + time);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + time + 0.5);
+          
+          osc.connect(gain);
+          gain.connect(this.audioContext.destination);
+          
+          osc.start(this.audioContext.currentTime + time);
+          osc.stop(this.audioContext.currentTime + time + 0.5);
+        });
+      }
+
+      // Risa de terror
+      playRisa() {
+        const times = [0, 0.2, 0.4, 0.6, 0.8];
+        const freqs = [880, 660, 440, 660, 880]; // Notas agudas
+        
+        times.forEach((time, i) => {
+          const osc = this.audioContext.createOscillator();
+          const gain = this.audioContext.createGain();
+          
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(freqs[i], this.audioContext.currentTime + time);
+          
+          gain.gain.setValueAtTime(0.3, this.audioContext.currentTime + time);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + time + 0.15);
+          
+          osc.connect(gain);
+          gain.connect(this.audioContext.destination);
+          
+          osc.start(this.audioContext.currentTime + time);
+          osc.stop(this.audioContext.currentTime + time + 0.15);
+        });
+      }
+
+      // Sonido de selección (moneda/arma)
+      playSelect() {
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, this.audioContext.currentTime); // Do
+        osc.frequency.setValueAtTime(659.25, this.audioContext.currentTime + 0.1); // Mi
+        osc.frequency.setValueAtTime(783.99, this.audioContext.currentTime + 0.2); // Sol
+        
+        gain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+        
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc.start();
+        osc.stop(this.audioContext.currentTime + 0.3);
+      }
+
+      // Sonido de movimiento (pasos)
+      playMove() {
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, this.audioContext.currentTime);
+        
+        gain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+        
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc.start();
+        osc.stop(this.audioContext.currentTime + 0.1);
+      }
+
+      // Sonido de acción
+      playAction() {
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+        
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(392.00, this.audioContext.currentTime); // Sol
+        osc.frequency.setValueAtTime(293.66, this.audioContext.currentTime + 0.1); // Re
+        
+        gain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+        
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+        
+        osc.start();
+        osc.stop(this.audioContext.currentTime + 0.2);
+      }
+
+      // Música de fondo tenebrosa (nueva versión)
+      playGameMusic() {
+        const osc1 = this.audioContext.createOscillator();
+        const osc2 = this.audioContext.createOscillator();
+        const gain1 = this.audioContext.createGain();
+        const gain2 = this.audioContext.createGain();
+        
+        // Oscilador principal (melodía)
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(220, this.audioContext.currentTime);
+        
+        // Oscilador secundario (bajo)
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(110, this.audioContext.currentTime);
+        
+        // Ganancia
+        gain1.gain.setValueAtTime(0.05, this.audioContext.currentTime);
+        gain2.gain.setValueAtTime(0.03, this.audioContext.currentTime);
+        
+        // Conexiones
+        osc1.connect(gain1);
+        osc2.connect(gain2);
+        gain1.connect(this.audioContext.destination);
+        gain2.connect(this.audioContext.destination);
+        
+        // Iniciar
+        osc1.start();
+        osc2.start();
+        
+        // Melodía tenebrosa (más simple)
+        const melody = [
+          { note: 220, duration: 2 }, // La
+          { note: 196, duration: 1 }, // Sol
+          { note: 174.61, duration: 2 }, // Fa
+          { note: 146.83, duration: 1 }, // Re
+          { note: 130.81, duration: 2 } // Do
+        ];
+        
+        let currentTime = this.audioContext.currentTime;
+        
+        const playMelody = () => {
+          melody.forEach((note, index) => {
+            osc1.frequency.setValueAtTime(note.note, currentTime);
+            osc2.frequency.setValueAtTime(note.note / 2, currentTime);
+            currentTime += note.duration;
+          });
+          
+          // Repetir la melodía
+          setTimeout(playMelody, currentTime - this.audioContext.currentTime);
+          currentTime = this.audioContext.currentTime;
+        };
+        
+        playMelody();
+        
+        return { osc1, osc2, gain1, gain2 };
+      }
+    }
+
+
+
+
+    const soundGenerator = new SoundGenerator();
+    let music = null;
+
+    // Secuencia de pantallas
+    function iniciarSecuencia() {
+      // Reproducir sonido de explosión
+      soundGenerator.playExplosion();
+      
+      // Pantalla 1: Estudios Skeleton (3 segundos)
+      setTimeout(() => {
+        document.getElementById('pantalla1').style.opacity = '0';
+        document.getElementById('pantalla2').style.display = 'flex';
+        
+        // Reproducir risa de terror y mostrarla
+        soundGenerator.playRisa();
+        document.getElementById('risa').style.animation = 'risa 4s forwards';
+        
+        // Pantalla 2: Título del juego (4 segundos)
+        setTimeout(() => {
+          document.getElementById('pantalla2').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('pantalla2').style.display = 'none';
+            document.getElementById('pantalla3').style.display = 'flex';
+          }, 1000);
+        }, 4000);
+      }, 3000);
+    }
+
+    // Iniciar secuencia al cargar
+    window.addEventListener('load', iniciarSecuencia);
+
+    // Seleccionar personaje
+    document.querySelectorAll('.personaje').forEach(el => {
+      el.addEventListener('click', function() {
+        document.querySelectorAll('.personaje').forEach(p => p.classList.remove('seleccionado'));
+        this.classList.add('seleccionado');
+        personajeSeleccionado = this.getAttribute('data-personaje');
+        colorPersonaje = this.getAttribute('data-color');
+        
+        // Reproducir sonido de selección
+        soundGenerator.playSelect();
+        
+        // Mostrar detalles del personaje
+        const datos = personajesData[personajeSeleccionado];
+        document.getElementById('nombre-detalle').textContent = datos.nombre;
+        document.getElementById('historia-detalle').textContent = datos.historia;
+        document.getElementById('fuerza').textContent = datos.fuerza;
+        document.getElementById('velocidad').textContent = datos.velocidad;
+        document.getElementById('inteligencia').textContent = datos.inteligencia;
+        
+        // Actualizar fondo del detalle
+        document.getElementById('fondo-detalle').style.background = colorPersonaje;
+        
+        // Mostrar botón de jugar
+        document.getElementById('btn-jugar').style.display = 'block';
+
+        // Actualizar nombre del jugador
+        document.getElementById('nombre-jugador-texto').textContent = datos.nombre;
+        document.getElementById('color-jugador').style.backgroundColor = colorPersonaje;
+      });
+    });
+
+    // Botón jugar
+    document.getElementById('btn-jugar').addEventListener('click', function() {
+      document.getElementById('pantalla3').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('pantalla3').style.display = 'none';
+        document.getElementById('pantalla5').style.display = 'block';
+
+        document.getElementById('fullscreen-btn').style.display = 'flex';
+
+        // Reproducir música del juego
+        music = soundGenerator.playGameMusic();
+        
+        iniciarJuego();
+      }, 1000);
+    });
+
+
+
+// Función para alternar pantalla completa
+// Función mejorada para alternar pantalla completa
+function toggleFullscreen() {
+  const doc = document;
+  const docEl = doc.documentElement;
+  
+  // Verificar si ya está en pantalla completa
+  const isFullscreen = doc.fullscreenElement || 
+                     doc.webkitFullscreenElement || 
+                     doc.msFullscreenElement;
+  
+  // Métodos para entrar/salir de pantalla completa
+  const requestFullscreen = docEl.requestFullscreen || 
+                          docEl.webkitRequestFullscreen || 
+                          docEl.msRequestFullscreen;
+  
+  const exitFullscreen = doc.exitFullscreen || 
+                       doc.webkitExitFullscreen || 
+                       doc.msExitFullscreen;
+  
+  if (!isFullscreen) {
+    // Entrar en pantalla completa
+    if (requestFullscreen) {
+      requestFullscreen.call(docEl).catch(err => {
+        console.error("Error al entrar en pantalla completa:", err);
+        
+        // Fallback para iOS
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        } else {
+          
+        }
+      });
+    }
+  } else {
+    // Salir de pantalla completa
+    if (exitFullscreen) {
+      exitFullscreen.call(doc);
+    }
+  }
+}
+
+// Función para forzar pantalla completa al cargar (en móviles)
+function initFullscreen() {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    // Pequeño retraso para permitir interacción del usuario
+    setTimeout(() => {
+      toggleFullscreen();
+      
+      // Intentar bloquear orientación en móviles
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(e => {
+          console.log("No se pudo bloquear orientación:", e);
+        });
+      }
+    }, 1000);
+  }
+}
+
+// Configurar el botón de pantalla completa
+document.addEventListener('DOMContentLoaded', function() {
+  const fullscreenBtn = document.getElementById('fullscreen-btn');
+  
+  if (fullscreenBtn) {
+    // Mostrar el botón solo si el navegador soporta fullscreen
+    fullscreenBtn.style.display = 
+      (document.documentElement.requestFullscreen || 
+       document.documentElement.webkitRequestFullscreen || 
+       document.documentElement.msRequestFullscreen) ? 'flex' : 'none';
+    
+    // Evento click mejorado
+    fullscreenBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFullscreen();
+    });
+    
+    // Actualizar icono cuando cambia el estado
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+    document.addEventListener('msfullscreenchange', updateFullscreenButton);
+    
+    function updateFullscreenButton() {
+      const isFullscreen = document.fullscreenElement || 
+                         document.webkitFullscreenElement || 
+                         document.msFullscreenElement;
+      fullscreenBtn.textContent = isFullscreen ? '⛶' : '⛶';
+    }
+  }
+  
+  // Iniciar pantalla completa automática en móviles
+  initFullscreen();
+});
+
+// Prevenir zoom y gestos no deseados
+document.addEventListener('touchstart', function(e) {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+document.addEventListener('gesturestart', function(e) {
+  e.preventDefault();
+});
+
+
+
+
+
+
+
+    // Manejar cambios de orientación
+    function handleOrientationChange() {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      
+      // Ajustar controles según orientación
+      if (isPortrait) {
+        // Disposición vertical (móvil/tablet vertical)
+        document.querySelector('.controles').style.flexDirection = 'row';
+        document.querySelector('.controles').style.justifyContent = 'space-between';
+      } else {
+        // Disposición horizontal (tablet/PC o móvil horizontal)
+        document.querySelector('.controles').style.flexDirection = 'row';
+        document.querySelector('.controles').style.justifyContent = 'space-between';
+      }
+      
+      // Redimensionar canvas si ya existe
+      if (camera && renderer) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+    // Función principal del juego
+    function iniciarJuego() {
+      // Escena y cámara
+      scene = new THREE.Scene();
+      
+      // Añadir estrellas al cielo
+      scene.background = new THREE.Color(0x87CEEB);
+
+      camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 2, 5); // Posición inicial relativa al personaje
+
+      renderer = new THREE.WebGLRenderer({ 
+        canvas: document.getElementById('juego'),
+        antialias: true 
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+
+
+
+      // Luces para un día soleado
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444422, 0.8);
+      hemiLight.position.set(0, 50, 0);
+      scene.add(hemiLight);
+
+
+      const sunLight = new THREE.DirectionalLight(0xffffcc, 1);
+      sunLight.position.set(50, 100, 50); // Posición alta para simular el sol
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.width = 2048;
+      sunLight.shadow.mapSize.height = 2048;
+      sunLight.shadow.camera.near = 0.5;
+      sunLight.shadow.camera.far = 500;
+      scene.add(sunLight);
+
+      // Luz de calle
+      const streetLight = new THREE.PointLight(0xffcc99, 0.8, 15);
+      streetLight.position.set(0, 5, -12);
+      streetLight.castShadow = true;
+      scene.add(streetLight);
+
+      // Linterna del personaje (spotlight)
+      const flashlight = new THREE.SpotLight(0xffffff, 1, 20, Math.PI / 6, 0.5);
+      flashlight.position.set(0, 1.5, 0);
+      flashlight.target.position.set(0, 0, -5);
+      flashlight.castShadow = true;
+      scene.add(flashlight);
+      scene.add(flashlight.target);
+
+
+
+
+      // Suelo
+      const suelo = new THREE.Mesh(
+        new THREE.PlaneGeometry(200, 200),
+        new THREE.MeshStandardMaterial({ 
+          color: 0x55aa55, // Verde más vivo
+          roughness: 0.8,
+          metalness: 0.1
+        })
+      );
+      suelo.rotation.x = -Math.PI / 2;
+      suelo.receiveShadow = true;
+      scene.add(suelo);
+
+
+      // Calle principal
+      const calle = new THREE.Mesh(
+        new THREE.PlaneGeometry(11, 100),
+        new THREE.MeshStandardMaterial({ 
+          color: 0x111111,
+          roughness: 0.9
+        })
+      );
+      calle.rotation.x = -Math.PI / 2;
+      calle.position.y = 0.01;
+      calle.position.z = -30;
+      scene.add(calle);
+
+
+      // Crear personaje seleccionado
+      personaje = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1.8, 1),
+        new THREE.MeshStandardMaterial({ 
+          color: new THREE.Color(colorPersonaje),
+          roughness: 0.7,
+          metalness: 0.3
+        })
+      );
+      personaje.position.set(0, 0.9, 0);
+      personaje.castShadow = true;
+      personaje.receiveShadow = true;
+      scene.add(personaje);
+
+
+      // --- LETRERO ---
+      function crearLetrero() {
+        const grupo = new THREE.Group();
+        
+        // Base del letrero
+        const baseLetrero = new THREE.Mesh(
+          new THREE.BoxGeometry(14, 0.8, 0.5),
+          new THREE.MeshStandardMaterial({ 
+            color: 0x553333,
+            metalness: 0.7, 
+            roughness: 0.1
+          })
+        );
+        baseLetrero.position.set(0,5, -5);
+        grupo.add(baseLetrero);
+
+        // Soportes oxidados
+        const soporteGeom = new THREE.BoxGeometry(0.2, 5.2, 0.2);
+        const soporteMaterial = new THREE.MeshStandardMaterial({ 
+          color: 0x553333,
+          metalness: 0.7,
+          roughness: 0.8
+        });
+
+
+        
+        const soporte1 = new THREE.Mesh(soporteGeom, soporteMaterial);
+        soporte1.position.set(-6, 2, -5.5);
+        grupo.add(soporte1);
+
+
+        const soporte1a = new THREE.Mesh(soporteGeom, soporteMaterial);
+        soporte1a.position.set(-6.8, 2, -5.5);
+        grupo.add(soporte1a);
+
+        const soporte2 = new THREE.Mesh(soporteGeom, soporteMaterial);
+        soporte2.position.set(-6, 2, -4.5);
+        grupo.add(soporte2);
+
+        const soporte3 = new THREE.Mesh(soporteGeom, soporteMaterial);
+        soporte3.position.set(-6.8, 2, -4.5);
+        grupo.add(soporte3);
+
+
+        const soporte4 = soporte1.clone();
+        soporte4.position.set(6, 2, -5.5);
+        grupo.add(soporte4);
+
+        const soporte4a = soporte1.clone();
+        soporte4a.position.set(6.8, 2, -5.5);
+        grupo.add(soporte4a);
+
+
+        const soporte5 = soporte1.clone(); //AQUI COLOCAR 
+        soporte5.position.set(6, 2, -4.5);
+        grupo.add(soporte5);
+
+        const soporte5a = soporte1.clone();
+        soporte5a.position.set(6.8, 2, -4.5);
+        grupo.add(soporte5a);
+
+        // Texto sangriento
+        const canvas = document.createElement('canvas');
+        canvas.width = 533;
+        canvas.height = 128;
+        const context = canvas.getContext('2d');
+        
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.font = 'Bold 40px Arial';
+        context.fillStyle = '#cccccc';
+        context.textAlign = 'center';
+        context.shadowColor = '0x553333';
+        context.shadowBlur = 5;
+        
+        // Efecto de sangre goteando
+        context.fillText('BIENVENIDOS A RANCO', canvas.width/2, 80);
+
+
+        const texturaTexto = new THREE.CanvasTexture(canvas);
+        const textoGeom = new THREE.PlaneGeometry(5, 1.2);
+        const textoMaterial = new THREE.MeshBasicMaterial({ 
+          map: texturaTexto,
+          transparent: true
+        });
+        const textoMesh = new THREE.Mesh(textoGeom, textoMaterial);
+        textoMesh.position.set(0, 5, -4.74);
+        grupo.add(textoMesh);
+
+
+
+        // --- Material de concreto (gris oscuro, rugoso) ---
+        const materialConcreto = new THREE.MeshStandardMaterial({
+            color: 0x7a7a7a,  // Gris medio (como cemento fresco)
+            roughness: 1.0,   // Totalmente mate
+            metalness: 0.0    // Sin brillo
+        });
+
+        // --- Base izquierda (para los 4 pilares del lado izquierdo) ---
+        const baseIzquierda = new THREE.Mesh(
+            // Ajustamos el tamaño para que cubra desde -6.8 a -6 en X, y -5.5 a -4.5 en Z
+            new THREE.BoxGeometry(0.8 + 0.2, 0.2, 1.0 + 0.2), // Ancho: distancia entre pilares (0.8) + margen (0.2)
+            materialConcreto
+        );
+        // Posición centrada entre los pilares izquierdos:
+        baseIzquierda.position.set(-6.4, 0.1, -5.0); // Y = -0.1 para que se vea al ras del suelo
+        grupo.add(baseIzquierda);
+
+        // --- Base derecha (para los 4 pilares del lado derecho) ---
+        const baseDerecha = baseIzquierda.clone();
+        baseDerecha.position.set(6.4, 0.1, -5.0); // Mismo Y y Z, pero en X positivo
+        grupo.add(baseDerecha);
+
+        return grupo;
+      }
+
+      scene.add(crearLetrero());
+
+
+
+
+let icono, modalGroup;
+const interactDistance = 2.5;
+
+function crearIcono() {
+    const grupo = new THREE.Group();
+
+    // 1. Icono interactivo
+    const iconoGeom = new THREE.SphereGeometry(0.3, 32, 32);
+    const iconoMat = new THREE.MeshStandardMaterial({ 
+        color: 0x00aaff,
+        emissive: 0x004477,
+        metalness: 0.5,
+        roughness: 0.5
+    });
+    icono = new THREE.Mesh(iconoGeom, iconoMat);
+    icono.position.set(4, 0.8, -4);
+    icono.castShadow = true;
+    grupo.add(icono);
+
+    // 2. Configuración del modal
+    modalGroup = new THREE.Group();
+    modalGroup.visible = false;
+
+    // Fondo del modal
+    const modalBase = new THREE.Mesh(
+        new THREE.PlaneGeometry(3, 2),
+        new THREE.MeshStandardMaterial({ 
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.95,
+            side: THREE.DoubleSide
+        })
+    );
+    modalGroup.add(modalBase);
+
+    // Imagen - Solución definitiva
+    const imgMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.7, 1.8),
+        new THREE.MeshStandardMaterial({
+            side: THREE.DoubleSide,
+            color: 0xeeeeee // Color temporal
+        })
+    );
+    imgMesh.position.set(0, 0, 0.1); // Asegurar que esté sobre el fondo
+    modalGroup.add(imgMesh);
+
+    // Cargar imagen con solución 100% funcional
+    const loadImage = () => {
+        // 1. Configurar CORS para imágenes externas
+        THREE.TextureLoader.crossOrigin = "Anonymous";
+        
+        // 2. Crear loader con manejo de errores
+        const textureLoader = new THREE.TextureLoader();
+        
+        // 3. Lista de posibles fuentes (externa + local)
+        const imageSources = [
+            'https://www.welcomechile.com/futrono/imagenes/futrono-175.jpg',
+            'img/img1.jpg',
+            'https://via.placeholder.com/800x600/333333/FFFFFF?text=Futrono+Chile' // Fallback
+        ];
+
+        // 4. Función para intentar cargar
+        const tryLoadImage = (index = 0) => {
+            if (index >= imageSources.length) return;
+
+            textureLoader.load(
+                imageSources[index] + (index === 0 ? '?cache=' + Date.now() : ''), // Cache busting para la primera
+                (texture) => {
+                    console.log('Imagen cargada desde:', imageSources[index]);
+                    
+                    // A. Asignar textura
+                    imgMesh.material.map = texture;
+                    
+                    // B. Ajustar relación de aspecto
+                    const aspect = texture.image.width / texture.image.height;
+                    const targetAspect = 2.7/1.8;
+                    
+                    if (aspect > targetAspect) {
+                        imgMesh.scale.y = targetAspect / aspect;
+                    } else {
+                        imgMesh.scale.x = aspect / targetAspect;
+                    }
+                    
+                    // C. Forzar actualización
+                    imgMesh.material.needsUpdate = true;
+                    imgMesh.material.color.set(0xFFFFFF);
+                    
+                    // D. Configurar propiedades visuales
+                    imgMesh.material.metalness = 0.1;
+                    imgMesh.material.roughness = 0.5;
+                },
+                undefined,
+                (error) => {
+                    console.error('Error con fuente:', imageSources[index], error);
+                    tryLoadImage(index + 1); // Intentar siguiente fuente
+                }
+            );
+        };
+
+        tryLoadImage(); // Comenzar con la primera fuente
+    };
+
+    loadImage();
+
+    grupo.add(modalGroup);
+    return grupo;
+}
+
+// Añadir a la escena
+const iconoGrupo = crearIcono();
+scene.add(iconoGrupo);
+
+
+
+
+
+
+
+
+      // --- TECHOS TRIANGULARES PARA LOS PILARES ---
+      function crearTechosPilares() {
+          const grupo = new THREE.Group();
+
+          // Material del techo (mismo que el tejado principal)
+          const materialTejado = new THREE.MeshStandardMaterial({ 
+              color: 0x553333,
+              roughness: 0.8,
+              metalness: 0.7,
+              side: THREE.DoubleSide // Importante para geometrías personalizadas
+          });
+
+          // Dimensiones ajustadas a los pilares
+          const ancho = 2.2 ;  // Mismo ancho que las bases de cemento
+          const altura = 1;       // Altura del triángulo
+          const profundidad = 2 ; // Misma profundidad que las bases
+
+          // Geometría triangular (versión simplificada y garantizada)
+          const shape = new THREE.Shape();
+          shape.moveTo(-ancho/2, 0);
+          shape.lineTo(0, altura);
+          shape.lineTo(ancho/2, 0);
+          shape.lineTo(-ancho/2, 0);
+
+          const extrudeSettings = {
+              steps: 1,
+              depth: profundidad,
+              bevelEnabled: false
+          };
+
+          const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+          geometry.rotateX(Math.PI/1); // Rotar para que quede horizontal
+            geometry.rotateZ(Math.PI);    // Girar 180° para que el pico quede arriba
+
+          geometry.translate(0, -0.3, 1); // Centrar
+
+          // --- Techo izquierdo ---
+          const techoIzq = new THREE.Mesh(geometry, materialTejado);
+          techoIzq.position.set(-6, 5.2 + altura/2, -5.0); // 5.2 = altura de pilares
+          techoIzq.rotation.y = Math.PI/2; // Girar 90° para que el pico mire hacia adelante
+          grupo.add(techoIzq);
+
+          // --- Techo derecho ---
+          const techoDer = techoIzq.clone();
+          techoDer.position.set(6, 5.2 + altura/2, -5.0);
+          grupo.add(techoDer);
+
+          return grupo;
+      }
+
+      // Añadir a la escena
+      scene.add(crearTechosPilares());
+
+      // --- TECHO TRIANGULAR GIRO 90° (HACIA LOS LADOS) ---
+      function crearTejadoHorizontal() {
+          const grupo = new THREE.Group();
+
+          // Dimensiones (mismo largo que el letrero: 14)
+          const largo = 4;       // Ancho del tejado (coincide con el letrero)
+          const altura = 2;       // Altura del triángulo del tejado
+          const profundidad = 10;  // Grosor del tejado
+
+          // Material del tejado (tejas o madera)
+          const materialTejado = new THREE.MeshStandardMaterial({ 
+              color: 0x553333,    // Color marrón (tejas/madera)
+              roughness: 0.8,     // Textura áspera
+              metalness: 0.7      // Poco brillo
+          });
+
+          // Geometría del tejado (forma triangular alargada, pero girada 90° en Y)
+          const tejadoGeom = new THREE.BufferGeometry();
+
+          // Puntos del tejado (forma de prisma triangular, pero ahora el pico mira hacia +Z)
+          const vertices = new Float32Array([
+              // Parte inferior (base del triángulo)
+              -largo/2, 0, 0,     // Esquina izquierda
+              -largo/2, 0, profundidad,  // Esquina izquierda (parte trasera)
+              largo/2, 0, 0,      // Esquina derecha
+              largo/2, 0, profundidad,   // Esquina derecha (parte trasera)
+
+              // Pico del tejado (ahora en Z positivo)
+              0, altura, 0,            // Pico delantero
+              0, altura, profundidad   // Pico trasero
+          ]);
+
+          // Caras del tejado (triángulos que forman las paredes)
+          const indices = [
+              // Lado izquierdo
+              0, 1, 4,
+              1, 5, 4,
+              // Lado derecho
+              2, 4, 3,
+              3, 4, 5,
+              // Base del tejado
+              0, 2, 1,
+              1, 2, 3,
+              // Techo (triángulo frontal y trasero)
+              0, 4, 2,
+              1, 3, 5
+          ];
+
+          // Aplicar geometría
+          tejadoGeom.setIndex(indices);
+          tejadoGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+          // Crear malla del tejado
+          const tejado = new THREE.Mesh(tejadoGeom, materialTejado);
+          tejado.position.set(-5, 5.3, -5);  // Posición sobre el letrero
+          tejado.rotation.y = Math.PI / 2; // GIRO 90° (para que el pico mire hacia +Z)
+
+
+          grupo.add(tejado);
+          return grupo;
+      }
+      scene.add(crearTejadoHorizontal());
+
+
+
+
+
+      // --- Movimiento personaje ---
+      let input = { 
+        izquierda: false, 
+        derecha: false, 
+        adelante: false, 
+        atras: false, 
+        accion: false,
+        camaraIzq: false,
+        camaraDer: false,
+        camaraArriba: false,
+        camaraAbajo: false,
+        linterna: false
+      };
+      const velocidad = 0.1;
+      let cameraRotationSpeed = 0;
+      const maxCameraRotationSpeed = 0.05;
+      const cameraRotationAcceleration = 0.005;
+      const cameraRotationDeceleration = 0.005;
+      const cameraPitchSpeed = 0.02;
+      const minPitch = -Math.PI/5.8; 
+      const maxPitch = Math.PI/2; 
+
+      let isJumping = false;
+      let jumpVelocity = 0;
+      const gravity = 0.02;
+      const jumpForce = 0.4;
+
+      function moverPersonaje() {
+        const now = Date.now();
+        
+        // Movimiento relativo a la dirección de la cámara
+        const forwardX = Math.sin(cameraAngle); // Cambiado el signo
+        const forwardZ = Math.cos(cameraAngle); // Cambiado el signo
+        
+        if (input.adelante) {
+          personaje.position.x -= forwardX * velocidad;
+          personaje.position.z -= forwardZ * velocidad;
+          if (now - lastMoveSoundTime > moveSoundCooldown) {
+            soundGenerator.playMove();
+            lastMoveSoundTime = now;
+          }
+        }
+        if (input.atras) {
+          personaje.position.x += forwardX * velocidad;
+          personaje.position.z += forwardZ * velocidad;
+
+          if (now - lastMoveSoundTime > moveSoundCooldown) {
+            soundGenerator.playMove();
+            lastMoveSoundTime = now;
+          }
+        }
+        if (input.izquierda) {
+          personaje.position.x -= forwardZ * velocidad;
+          personaje.position.z += forwardX * velocidad;
+          if (now - lastMoveSoundTime > moveSoundCooldown) {
+            soundGenerator.playMove();
+            lastMoveSoundTime = now;
+          }
+        }
+        if (input.derecha) {
+          personaje.position.x += forwardZ * velocidad;
+          personaje.position.z -= forwardX * velocidad;
+          if (now - lastMoveSoundTime > moveSoundCooldown) {
+            soundGenerator.playMove();
+            lastMoveSoundTime = now;
+          }
+        }
+        if (input.accion) {
+          soundGenerator.playAction();
+          console.log("Acción A");
+        }
+        
+        // Rotación de cámara horizontal con aceleración/suavizado
+        if (input.camaraIzq) {
+          cameraRotationSpeed = Math.min(cameraRotationSpeed + cameraRotationAcceleration, maxCameraRotationSpeed);
+        } else if (input.camaraDer) {
+          cameraRotationSpeed = Math.max(cameraRotationSpeed - cameraRotationAcceleration, -maxCameraRotationSpeed);
+        } else {
+          // Deceleración cuando no hay input
+          if (cameraRotationSpeed > 0) {
+            cameraRotationSpeed = Math.max(0, cameraRotationSpeed - cameraRotationDeceleration);
+          } else if (cameraRotationSpeed < 0) {
+            cameraRotationSpeed = Math.min(0, cameraRotationSpeed + cameraRotationDeceleration);
+          }
+        }
+        
+        cameraAngle += cameraRotationSpeed;
+        
+
+        // Lógica de salto
+        if (input.salto && !isJumping && personaje.position.y <= 0.9) {
+            isJumping = true;
+            jumpVelocity = jumpForce;
+            soundGenerator.playAction(); // Sonido de salto
+        }
+        
+        if (isJumping) {
+            personaje.position.y += jumpVelocity;
+            jumpVelocity -= gravity;
+            
+            // Verificar si ha tocado el suelo
+            if (personaje.position.y <= 0.9) {
+                personaje.position.y = 0.9;
+                isJumping = false;
+                jumpVelocity = 0;
+            }
+        }
+
+
+        // Rotación de cámara vertical
+        if (input.camaraArriba) {
+          cameraPitch = Math.max(cameraPitch - cameraPitchSpeed, minPitch); // Invertido
+        }
+        if (input.camaraAbajo) {
+          cameraPitch = Math.min(cameraPitch + cameraPitchSpeed, maxPitch); // Invertido
+        }
+        
+        // Linterna
+        if (input.linterna) {
+          flashlightEnabled = !flashlightEnabled;
+          input.linterna = false; // Para que no siga alternando
+          flashlight.intensity = flashlightEnabled ? 1 : 0;
+        }
+      }
+
+
+      // Controles
+      ['izquierda', 'derecha', 'adelante', 'atras', 'accion', 'camara-izq', 'camara-der', 'camara-arriba', 'camara-abajo', 'linterna'].forEach(b => {
+        const id = b === 'camara-izq' ? 'camaraIzq' : 
+                  b === 'camara-der' ? 'camaraDer' :
+                  b === 'camara-arriba' ? 'camaraArriba' :
+                  b === 'camara-abajo' ? 'camaraAbajo' : b;
+        
+        document.getElementById(b).addEventListener('touchstart', () => input[id] = true);
+        document.getElementById(b).addEventListener('touchend', () => input[id] = false);
+        document.getElementById(b).addEventListener('touchcancel', () => input[id] = false);
+        document.getElementById('salto').addEventListener('touchstart', () => input.salto = true);
+        document.getElementById('salto').addEventListener('touchend', () => input.salto = false);
+        document.getElementById('salto').addEventListener('touchcancel', () => input.salto = false);
+      });
+
+
+
+
+
+
+      // 1. Asegurar que el canvas tenga el foco
+      const canvas = document.getElementById('juego');
+      canvas.setAttribute('tabindex', '0');
+      canvas.style.outline = 'none'; // Eliminar borde feo al enfocar
+      canvas.focus(); // Enfocar automáticamente
+
+      // 2. Control de teclado optimizado para PC
+      function setupKeyboardControls() {
+        const handleKey = (e, isKeyDown) => {
+          // Usar e.code para evitar problemas con distribuciones de teclado
+          switch(e.code) {
+            case 'KeyW': input.camaraArriba = isKeyDown; break;
+            case 'KeyS': input.camaraAbajo = isKeyDown; break;
+            case 'KeyA': input.camaraIzq = isKeyDown; break;
+            case 'KeyD': input.camaraDer = isKeyDown; break;
+            case 'ArrowUp': input.adelante = isKeyDown; break;
+            case 'ArrowDown': input.atras = isKeyDown; break;
+            case 'ArrowLeft': input.izquierda = isKeyDown; break;
+            case 'ArrowRight': input.derecha = isKeyDown; break;
+            case 'KeyE': input.accion = isKeyDown; break;
+            case 'KeyR': input.linterna = isKeyDown; break;
+            case 'Space': input.salto = isKeyDown; break;
+           }
+          
+          // Prevenir comportamiento predeterminado solo para las teclas que usamos
+          if ([
+            'KeyW', 'KeyS', 'KeyA', 'KeyD', 
+            'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+            'KeyE', 'KeyR', 'Space',
+          ].includes(e.code)) {
+            e.preventDefault();
+          }
+        };
+
+        window.addEventListener('keydown', (e) => handleKey(e, true));
+        window.addEventListener('keyup', (e) => handleKey(e, false));
+      }
+
+
+
+
+
+        // --- RAYCASTER PARA INTERACCIÓN ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+// Manejo de clics (añadir al código existente)
+function onClick(event) {
+    const mouse = new THREE.Vector2(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1
+    );
+
+    raycaster.setFromCamera(mouse, camera);
+    
+    // Verificar clic en botones
+    const intersects = raycaster.intersectObjects([
+        abrirBoton.mesh, 
+        cerrarBoton.mesh, 
+        botonRegresar.mesh
+    ], true);
+
+    if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        if (obj === abrirBoton.mesh) {
+            modalGroup.visible = false;
+            galeriaGroup.visible = true;
+        }
+        else if (obj === cerrarBoton.mesh || obj === botonRegresar.mesh) {
+            galeriaGroup.visible = false;
+            modalGroup.visible = true;
+        }
+    }
+}
+
+window.addEventListener('click', onClick);
+// Función de actualización MEJORADA
+function actualizarModal() {
+    if (!icono || !personaje || !camera || !modalGroup) return;
+
+    const distancia = personaje.position.distanceTo(icono.position);
+    const debeMostrar = distancia < interactDistance;
+    
+    if (debeMostrar !== modalGroup.visible) {
+        modalGroup.visible = debeMostrar;
+    }
+
+    if (modalGroup.visible) {
+        // 1. Posicionar sobre el icono
+        modalGroup.position.copy(icono.position);
+        modalGroup.position.y += 1.5; // Elevación
+        
+        // 2. Orientar hacia la cámara (SOLUCIÓN DEFINITIVA)
+        modalGroup.quaternion.copy(camera.quaternion);
+        
+        // 3. Ajustar rotación para que siempre sea legible
+        const euler = new THREE.Euler().setFromQuaternion(modalGroup.quaternion);
+        modalGroup.rotation.set(0, euler.y + Math.PI, 0); // Solución clave
+        
+        // 4. Pequeña animación de flotación
+        modalGroup.position.y += Math.sin(Date.now() * 0.002) * 0.05;
+    }
+}
+
+
+
+      //Inicializar controles
+      setupKeyboardControls();
+
+      // Animación
+      function animar() {
+          requestAnimationFrame(animar);
+
+          moverPersonaje(); // tu función de movimiento
+
+          // actualizar cámara y linterna
+          const horizontalDistance = Math.cos(cameraPitch) * cameraDistance;
+          const verticalDistance = Math.sin(cameraPitch) * cameraDistance;
+          camera.position.x = personaje.position.x + Math.sin(cameraAngle) * horizontalDistance;
+          camera.position.y = personaje.position.y + cameraHeight + verticalDistance;
+          camera.position.z = personaje.position.z + Math.cos(cameraAngle) * horizontalDistance;
+          camera.lookAt(personaje.position);
+
+          flashlight.position.set(personaje.position.x, personaje.position.y + 1.5, personaje.position.z);
+          const lookAtX = personaje.position.x - Math.sin(cameraAngle) * 5;
+          const lookAtZ = personaje.position.z - Math.cos(cameraAngle) * 5;
+          flashlight.target.position.set(lookAtX, personaje.position.y, lookAtZ);
+          actualizarModal(); // mostrar/ocultar modal y galería
+
+          renderer.render(scene, camera);
+      }
+
+      
+      animar();
+
+      // Manejar cambios de orientación y redimensionamiento
+      window.addEventListener('resize', handleOrientationChange);
+      window.addEventListener('orientationchange', handleOrientationChange);
+      handleOrientationChange();
+    }
+  </script>
+
+</body>
+</html>
+
+ 

@@ -1924,7 +1924,6 @@ function actualizarModal() {
           const lookAtX = personaje.position.x - Math.sin(cameraAngle) * 5;
           const lookAtZ = personaje.position.z - Math.cos(cameraAngle) * 5;
           flashlight.target.position.set(lookAtX, personaje.position.y, lookAtZ);
-          actualizarModal(); // mostrar/ocultar modal y galería
 
 
           // --- Añade esto para que el modal mire siempre a la cámara ---

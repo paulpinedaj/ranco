@@ -1926,6 +1926,22 @@ function actualizarModal() {
           flashlight.target.position.set(lookAtX, personaje.position.y, lookAtZ);
           actualizarModal(); // mostrar/ocultar modal y galería
 
+
+          // --- Añade esto para que el modal mire siempre a la cámara ---
+    if (modalGroup.visible) {
+        // 1. Posicionar el modal sobre el icono
+        modalGroup.position.copy(icono.position);
+        modalGroup.position.y += 1.5; // Elevación
+        
+        // 2. Hacer que el modal mire hacia la cámara (SOLUCIÓN CLAVE)
+        modalGroup.lookAt(camera.position);
+        
+        // 3. Pequeña animación de flotación (opcional)
+        modalGroup.position.y += Math.sin(Date.now() * 0.002) * 0.05;
+    }
+
+
+        
           renderer.render(scene, camera);
       }
 

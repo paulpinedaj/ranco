@@ -1622,7 +1622,8 @@ function crearIconoConModal(datos) {
 
     // Cargar imagen (sin cambios)
     new THREE.TextureLoader().load(datos.img, (texture) => {
-        texture.flipY = false;
+    texture.flipY = false; // ← Esto corrige la inversión
+    texture.encoding = THREE.sRGBEncoding; // ← Esto ayuda con los colores
         imgMesh.material.map = texture;
         imgMesh.material.needsUpdate = true;
     }, undefined, (error) => {

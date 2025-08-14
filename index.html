@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Ranco Game</title>
+<title>Ranco </title>
 
 
 <style>
@@ -675,7 +675,7 @@ height: 100vh;
 
   <!-- Pantalla 2: Título del juego -->
   <div class="pantalla" id="pantalla2">
-    <div class="titulo-juego">RANCO GAME</div>
+    <div class="titulo-juego">RANCO</div>
     <div class="subtitulo">Explora rutas naturales</div>
     <div class="risa-fantasmal" id="risa"></div>
   </div>
@@ -690,8 +690,8 @@ height: 100vh;
             <div class="fondo-personaje" style="background: #3399ff;"></div>
             <div class="avatar" style="background: #3399ff;">P</div>
             <div class="info-personaje">
-              <div class="nombre-personaje">PAUL</div>
-              <div class="tipo-personaje">El estratega</div>
+              <div class="nombre-personaje">Visitante 1</div>
+              <div class="tipo-personaje">Turista</div>
             </div>
           </div>
           
@@ -701,8 +701,8 @@ height: 100vh;
             <div class="fondo-personaje" style="background: #996633;"></div>
             <div class="avatar" style="background: #996633;">P</div>
             <div class="info-personaje">
-              <div class="nombre-personaje">MAX</div>
-              <div class="tipo-personaje">El resistente</div>
+              <div class="nombre-personaje">Visitante 2</div>
+              <div class="tipo-personaje">Local</div>
             </div>
           </div>
         </div>
@@ -712,8 +712,8 @@ height: 100vh;
       <div class="detalles-personaje" id="detalles-personaje">
         <div class="fondo-personaje" id="fondo-detalle"></div>
         <div class="detalles-contenido">
-          <h2 id="nombre-detalle">SELECCIONA UN HÉROE</h2>
-          <p id="historia-detalle">Cada personaje tiene habilidades únicas que te ayudarán a sobrevivir en Ranco Game. Elige sabiamente, tu decisión podría ser la diferencia entre la vida y la muerte.</p>
+          <h2 id="nombre-detalle">SELECCIONA UN VISITANTE</h2>
+          <p id="historia-detalle">Cada personaje tiene habilidades únicas.</p>
           <div class="stats">
             <div class="stat">
               <div class="valor" id="fuerza">-</div>
@@ -763,7 +763,7 @@ height: 100vh;
       </div>
     </div>
   </div>
-  
+
   <button class="fullscreen-btn" id="fullscreen-btn" style="display: none;">⛶</button>
 
 
@@ -1417,6 +1417,9 @@ document.addEventListener('gesturestart', function(e) {
 
 
 
+
+let icono, modalGroup;
+const interactDistance = 2.5;
 function crearIcono() {
     const grupo = new THREE.Group();
 
@@ -1525,6 +1528,126 @@ const iconoGrupo = crearIcono();
 scene.add(iconoGrupo);
 
 
+
+
+
+
+// Array de datos para los iconos (color + posición + imagen + título)
+const iconosData = [
+    { color: 0x8B4513, pos: { x: -5, y: 0.8, z: -10 }, img: 'img/img1.jpg', titulo: 'INTRO PORTAL' }, // Café
+    { color: 0xFFD700, pos: { x: 3, y: 0.8, z: -20 }, img: 'img/galpon.jpeg', titulo: 'GALPÓN' },        // Amarillo
+    { color: 0x1E90FF, pos: { x: -2, y: 0.8, z: -30 }, img: 'img/cuncun.jpg', titulo: 'CUNCUN' },       // Azul
+    { color: 0xFF4500, pos: { x: 4, y: 0.8, z: -40 }, img: 'img/mirador.jpg', titulo: 'MIRADOR' },       // Rojo
+    { color: 0x2E8B57, pos: { x: -6, y: 0.8, z: -50 }, img: 'img/policia.jpg', titulo: 'POLICÍA' },      // Verde
+    { color: 0xFF8C00, pos: { x: 0, y: 0.8, z: -60 }, img: 'img/futrono.jpg', titulo: 'CIUDAD FUTRONO' } // Naranja
+];
+
+// Función para crear texto en Canvas
+function crearTextoCanvas(texto) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    
+    // Fondo transparente
+    ctx.fillStyle = 'rgba(255, 255, 255, 0)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Texto en negro y negrita
+    ctx.font = 'Bold 28px Arial';
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(texto, canvas.width / 2, canvas.height / 2);
+    
+    return canvas;
+}
+
+// Función para crear un icono + modal (CON TÍTULO)
+function crearIconoConModal(datos) {
+    const grupo = new THREE.Group();
+
+    // 1. Icono (esfera de color) - SIN CAMBIOS
+    const iconoGeom = new THREE.SphereGeometry(0.3, 32, 32);
+    const iconoMat = new THREE.MeshStandardMaterial({ 
+        color: datos.color,
+        emissive: datos.color * 0.5,
+        metalness: 0.5,
+        roughness: 0.5
+    });
+    const iconoMesh = new THREE.Mesh(iconoGeom, iconoMat);
+    iconoMesh.position.set(datos.pos.x, datos.pos.y, datos.pos.z);
+    iconoMesh.castShadow = true;
+    grupo.add(iconoMesh);
+
+    // 2. Modal (ahora con título)
+    const modalGroup = new THREE.Group();
+    modalGroup.visible = false;
+
+    // Fondo del modal (más alto para el título)
+    const modalBase = new THREE.Mesh(
+        new THREE.PlaneGeometry(3, 2.5), // Aumentamos la altura
+        new THREE.MeshStandardMaterial({ 
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.95,
+            side: THREE.DoubleSide
+        })
+    );
+    modalGroup.add(modalBase);
+
+    // --- TÍTULO (nuevo) ---
+    const tituloTexture = new THREE.CanvasTexture(crearTextoCanvas(datos.titulo));
+    const tituloMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.8, 0.5),
+        new THREE.MeshBasicMaterial({ 
+            map: tituloTexture,
+            transparent: true
+        })
+    );
+    tituloMesh.position.set(0, 0.8, 0.1); // Posición arriba
+    modalGroup.add(tituloMesh);
+
+    // --- IMAGEN (ajustamos posición) ---
+    const imgMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.7, 1.8),
+        new THREE.MeshStandardMaterial({
+            side: THREE.DoubleSide,
+            map: null,
+            transparent: true
+        })
+    );
+    imgMesh.position.set(0, -0.2, 0.1); // Bajamos para el título
+    modalGroup.add(imgMesh);
+
+    // Cargar imagen (sin cambios)
+    new THREE.TextureLoader().load(datos.img, (texture) => {
+        texture.flipY = false;
+        imgMesh.material.map = texture;
+        imgMesh.material.needsUpdate = true;
+    }, undefined, (error) => {
+        console.error("Error al cargar imagen:", error);
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = `#${datos.color.toString(16).padStart(6, '0')}`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        imgMesh.material.map = new THREE.CanvasTexture(canvas);
+        imgMesh.material.needsUpdate = true;
+    });
+
+    grupo.add(modalGroup);
+    return { icono: iconoMesh, modal: modalGroup, imgMesh }; // Misma estructura
+}
+
+// Crear iconos (sin cambios)
+const iconos = [];
+iconosData.forEach(datos => {
+    const iconoObj = crearIconoConModal(datos);
+    scene.add(iconoObj.icono.parent);
+    iconos.push(iconoObj);
+});
 
 
 
@@ -1873,34 +1996,32 @@ function onClick(event) {
 }
 
 window.addEventListener('click', onClick);
-// Función de actualización MEJORADA
+// Función de actualización (conservando tu diseño)
 function actualizarModal() {
-    if (!icono || !personaje || !camera || !modalGroup) return;
+    if (!icono || !personaje || !camera) return;
 
     const distancia = personaje.position.distanceTo(icono.position);
-    const debeMostrar = distancia < interactDistance;
-    
-    if (debeMostrar !== modalGroup.visible) {
-        modalGroup.visible = debeMostrar;
-    }
+    modalGroup.visible = distancia < interactDistance;
 
     if (modalGroup.visible) {
-        // 1. Posicionar sobre el icono
-        modalGroup.position.copy(icono.position);
-        modalGroup.position.y += 1.5; // Elevación
+        // Posicionamiento igual que tu versión
+        const frenteCamara = new THREE.Vector3(0, 0, -1)
+            .applyQuaternion(camera.quaternion)
+            .multiplyScalar(1.5)
+            .add(personaje.position);
         
-        // 2. Orientar hacia la cámara (SOLUCIÓN DEFINITIVA)
+        modalGroup.position.copy(frenteCamara);
+        modalGroup.position.y += 1.2;
+        
+        // Orientación igual que tu versión
         modalGroup.quaternion.copy(camera.quaternion);
+        modalGroup.rotateY(Math.PI);
         
-        // 3. Ajustar rotación para que siempre sea legible
+        // Mantener horizontal
         const euler = new THREE.Euler().setFromQuaternion(modalGroup.quaternion);
-        modalGroup.rotation.set(0, euler.y + Math.PI, 0); // Solución clave
-        
-        // 4. Pequeña animación de flotación
-        modalGroup.position.y += Math.sin(Date.now() * 0.002) * 0.05;
+        modalGroup.quaternion.setFromEuler(new THREE.Euler(0, euler.y, 0));
     }
 }
-
 
 
       //Inicializar controles
@@ -1924,23 +2045,29 @@ function actualizarModal() {
           const lookAtX = personaje.position.x - Math.sin(cameraAngle) * 5;
           const lookAtZ = personaje.position.z - Math.cos(cameraAngle) * 5;
           flashlight.target.position.set(lookAtX, personaje.position.y, lookAtZ);
+          actualizarModal(); // mostrar/ocultar modal y galería
 
 
-          // --- Añade esto para que el modal mire siempre a la cámara ---
-    if (modalGroup.visible) {
-        // 1. Posicionar el modal sobre el icono
-        modalGroup.position.copy(icono.position);
-        modalGroup.position.y += 1.5; // Elevación
+    // --- Actualizar todos los modales ---
+    iconos.forEach(iconoObj => {
+        const distancia = personaje.position.distanceTo(iconoObj.icono.position);
+        const debeMostrar = distancia < interactDistance; // interactDistance = 2.5 (como antes)
         
-        // 2. Hacer que el modal mire hacia la cámara (SOLUCIÓN CLAVE)
-        modalGroup.lookAt(camera.position);
+        iconoObj.modal.visible = debeMostrar;
         
-        // 3. Pequeña animación de flotación (opcional)
-        modalGroup.position.y += Math.sin(Date.now() * 0.002) * 0.05;
-    }
+        if (debeMostrar) {
+            // Posicionar el modal sobre el icono
+            iconoObj.modal.position.copy(iconoObj.icono.position);
+            iconoObj.modal.position.y += 1.5;
+            
+            // Hacer que mire a la cámara
+            iconoObj.modal.lookAt(camera.position);
+            
+            // Animación de flotación (opcional)
+            iconoObj.modal.position.y += Math.sin(Date.now() * 0.002) * 0.05;
+        }
+    });
 
-
-        
           renderer.render(scene, camera);
       }
 
@@ -1956,5 +2083,4 @@ function actualizarModal() {
 
 </body>
 </html>
-
  
